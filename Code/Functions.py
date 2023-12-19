@@ -18,7 +18,6 @@ from ast import literal_eval
 class DecisionTree:
 
     # -----Inner Class DecisionNode -----
-
     class _DecisionNode:
         def __init__(self, value=None, children=None, subset=None, path=None):
             """
@@ -335,7 +334,6 @@ class Case:
         self.puntuacio = puntuacio
     
     #Getters
-
     def get_problem_vector(self):
         """
         Returns a vector with the descriptor attributes ordered as in the feature importance variable.
@@ -346,9 +344,8 @@ class Case:
                 self.fantasia, self.ciencia, self.creixement_personal, self.policiaca, self.juvenil,
                 self.pagines_max, self.pref_adaptacio_peli, self.pref_best_seller]
     
-    #Setters
     
-
+    #Setters
     def from_dict(self, case_dict):
         """
         Updates the attributes of the instance based on a dictionary representation of a case.
@@ -393,26 +390,44 @@ class Case:
             'puntuacio': self.puntuacio
         }
 
-    def set_id_case(self,id):
+    def set_id_case(self, id):
+        """
+        Sets the case ID.
+            :param id: The new ID to be assigned to the case.
+        """
         self.id_cas = id
     
-    def set_puntuacio(self,puntuacio):
+    def set_puntuacio(self, puntuacio):
+        """
+        Sets the score or rating of the solution.
+            :param puntuacio: The new score or rating to be assigned.
+        """
         self.puntuacio = puntuacio
     
-    def set_solucio(self,id_book):
+    def set_solucio(self, id_book):
+        """
+        Sets the solution of the case, typically an ID representing a book or recommendation.
+            :param id_book: The ID of the book or recommendation to be set as the solution.
+        """
         self.solucio = id_book
     
-    def set_comprat(self,comprat):
+    def set_comprat(self, comprat):
+        """
+        Sets the purchase status of the solution.
+            :param comprat: A boolean or similar indicator showing whether the solution was purchased.
+        """
         self.comprat = comprat
     
     #Python-like methods
-        
     def copy(self):
-        return Case(id_usuari=self.id_usuari,problema=(self.genere_persona, self.any_naixement, self.pref_adaptacio_peli, self.pref_best_seller, \
-        self.pref_tipus_lectura, self.pref_sagues, self.comedia, self.ficcio, self.ciencia_ficcio, \
-        self.historica, self.romance, self.fantasia, self.ciencia, self.creixement_personal, \
+        """
+        Creates a copy of the current instance of the case.
+            :return: A new instance of Case with the same attributes as the current one, except 'comprat' is set to 'No'.
+        """
+        return Case(id_usuari=self.id_usuari, problema=(self.genere_persona, self.any_naixement, self.pref_adaptacio_peli, self.pref_best_seller,
+        self.pref_tipus_lectura, self.pref_sagues, self.comedia, self.ficcio, self.ciencia_ficcio,
+        self.historica, self.romance, self.fantasia, self.ciencia, self.creixement_personal,
         self.policiaca, self.juvenil, self.pagines_max, 'No', self.idioma))
-
 
 
 
