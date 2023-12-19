@@ -8,7 +8,7 @@ import time
 
 #Load
 
-PATH_FILE = "Decision_Tree"
+PATH_FILE = "decision_tree"
 dt_instance = DecisionTree()
 dt = dt_instance.load(PATH_FILE)
 
