@@ -13,8 +13,8 @@ class CBR:
         self.cases=pd.read_csv("../ontologia/Cases.csv")
         self.users=pd.read_csv("../ontologia/Users.csv")
 
-         # Define ID for new cases to be added to CSV, keeping track of all cases in the database
-         self.id_case_1 = len(self.cases)
+        # Define ID for new cases to be added to CSV, keeping track of all cases in the database
+        self.id_case_1 = len(self.cases)
 
 
         # Convert data to appropriate dtypes
