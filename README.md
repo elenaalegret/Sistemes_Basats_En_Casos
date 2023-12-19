@@ -32,6 +32,8 @@ This repository contains the second project for the SBC course. The project focu
 - **`/Evaluació`**: Directory that stores Evaluation templates.
 	- `/Plantilles`: Directory containing templates for evaluation in Catalan, Spanish, and English languages.
 	- `/Evaluacions`: Directory containing real user evaluations.
+	- `proves_degradació.zip`: This file contains the edited code to enable experimentation with system degradation.
+    - `Experimentació.ipynb`:  Jupyter notebook with testing for the space-time degradation experimentation of the system.
 
 ## Additional Information
 ---
