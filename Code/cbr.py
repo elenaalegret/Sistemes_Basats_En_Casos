@@ -9,9 +9,9 @@ class CBR:
             :param case_base: The decision tree to be used for case-based reasoning, defaults to a new DecisionTree instance.
         """
         # Reading CSV files
-        self.books=pd.read_csv("../ontologia/Books.csv",low_memory=False)
-        self.cases=pd.read_csv("../ontologia/Cases.csv")
-        self.users=pd.read_csv("../ontologia/Users.csv")
+        self.books=pd.read_csv("Books.csv",low_memory=False)
+        self.cases=pd.read_csv("Cases.csv")
+        self.users=pd.read_csv("Users.csv")
 
         # Define ID for new cases to be added to CSV, keeping track of all cases in the database
         self.id_case_1 = len(self.cases)
@@ -668,7 +668,7 @@ class CBR:
         # Un cop funcioni el recomanador, amb la seguent linía guardarem els casos al csv permanentment i books
         #COMENTAR SI NO ES VOL GUARDAR.
 
-        self.cases.to_csv('../ontologia/Cases.csv', encoding='utf-8', index=False)
-        self.books.to_csv('../ontologia/Books.csv', encoding='utf-8', index=False)
-        self.users.to_csv('../ontologia/Users.csv', encoding='utf-8', index=False)
+        self.cases.to_csv('Cases.csv', encoding='utf-8', index=False)
+        self.books.to_csv('Books.csv', encoding='utf-8', index=False)
+        self.users.to_csv('Users.csv', encoding='utf-8', index=False)
 
