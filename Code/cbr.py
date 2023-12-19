@@ -4,18 +4,20 @@ from Functions import *
 class CBR:
    
     def __init__(self,case_base=DecisionTree()):
-        # Llegim els csv
+        """
+        Initializes a CBR instance with optional case base.
+            :param case_base: The decision tree to be used for case-based reasoning, defaults to a new DecisionTree instance.
+        """
+        # Reading CSV files
         self.books=pd.read_csv("../ontologia/Books.csv",low_memory=False)
         self.cases=pd.read_csv("../ontologia/Cases.csv")
         self.users=pd.read_csv("../ontologia/Users.csv")
 
-        #Definim l'id dels tres nous casos que afegirem al .csv, ja que aquest sempre tindrà constància de tots els casos que han passat per la BD
-        #tant si els guardem a l'arbre de casos com si no:
-
-        self.id_case_1 = len(self.cases)
+         # Define ID for new cases to be added to CSV, keeping track of all cases in the database
+         self.id_case_1 = len(self.cases)
 
 
-        #Convertim a dtypes adequats
+        # Convert data to appropriate dtypes
         self.books['traduccions'] = self.books.traduccions.apply(literal_eval)
         self.books['pertany_a'] = self.books.pertany_a.apply(literal_eval)
         self.books['edat_minima'] = self.books['edat_minima'].astype(int)
@@ -23,8 +25,7 @@ class CBR:
         self.books['any_publicacio'] = self.books['any_publicacio'].astype(int)
         self.cases['Idioma'] = self.cases.Idioma.apply(literal_eval)
 
-        #Variables importants
-
+        # Important variables
         self.range_pages_books = self.books['num_pagines'].max()-self.books['num_pagines'].min()
         self.any_publi_range = self.books['any_publicacio'].max()-self.books['any_publicacio'].min()
         self.edat_minima_range = self.books['edat_minima'].max()-self.books['edat_minima'].min()
@@ -35,10 +36,10 @@ class CBR:
                                   'pagines_max', 'pref_adaptacio_peli', 'pref_best_seller']
 
 
-        #Arbre de Casos
+        # Case Tree
         self.case_base = case_base
 
-        # Definim les variables d'atributs
+        # Define attribute variables
         self.genre_options = ['Romàntic','Ciència Ficció', 'Comèdia', 'Històrica', 'Ficció', 'Fantasia', 'Ciència', 'Creixement personal', 'Policiaca', 'Juvenil']
         self.language_options = ['Alemany', 'Albanès', 'Anglès', 'Búlgar', 'Català', 'Coreà', 'Croat', 'Danès', 'Espanyol', 'Finès', 'Francès', 'Gallec', 'Grec', 'Hebreu', 'Hongarès', 'Italià', 'Japonès', 'Letó', 'Neerlandès', 'Noruec', 'Polonès', 'Portuguès', 'Romanès', 'Rus', 'Serbi', 'Suec', 'Tailandès', 'Turc', 'Txec', 'Xinès']
         self.sex_options=['Dona','Home','Altres']
@@ -52,51 +53,92 @@ class CBR:
 
     ## GETTERS 
     def get_genre_options(self):
+        """
+        Returns the available genre options.
+            :return: A list of genre options.
+        """
         return self.genre_options
     def get_language_options(self):
+        """
+        Returns the available language options.
+            :return: A list of language options.
+        """
         return self.language_options
     def get_sex_options(self):
+        """
+        Returns the available gender options.
+            :return: A list of gender options.
+        """
         return self.sex_options
     def get_film_options(self):
+        """
+        Returns the available film adaptation preference options.
+            :return: A list of film adaptation preference options.
+        """
         return self.film_options
     def get_bestseller_options(self):
+        """
+        Returns the available bestseller preference options.
+            :return: A list of bestseller preference options.
+        """
         return self.bestseller_options
     def get_saga_options(self):
+        """
+        Returns the available saga preference options.
+            :return: A list of saga preference options.
+        """
         return self.saga_options
     def get_reading_options(self):
+        """
+        Returns the available reading type options.
+            :return: A list of reading type options.
+        """
         return self.reading_options
     
-    # Recupera el id maxim assignat a un lector
     def last_user(self):
+        """
+        Retrieves the ID of the last user in the system.
+            :return: The ID of the last user.
+        """
         return len(self.users)
     
-    # Recupera el id maxim assignat a un cas
     def last_case(self):
+        """
+        Retrieves the ID of the last case in the system.
+            :return: The ID of the last case.
+        """
         return len(self.cases)
     
-    # Afegim un nou usuari buit
     def add_user(self):
+        """
+        Adds a new, empty user to the system.
+        """
         self.users.loc[self.last_user()] = [self.last_user()+1,'']
     
-    # Esborra si no s'ha afegit cap usuari nou
     def delete_last_if_empty(self):
+        """
+        Deletes the last user if they have not been filled with any data.
+        """
         if len(self.users.loc[self.last_user()-1]['nom']) == 0:
             self.users.drop(self.last_user()-1,inplace=True)
 
-    # Recupera les dades del user que està utilitzant el recomanador, per mostrarli un formulari per default amb les seves ultimes preferencies
-    def user_data(self,id):
+    def user_data(self, id):
+        """
+        Retrieves the data of the user currently using the recommender.
+        Sets default values for new users, and retrieves the last preferences for existing users.
+            :param id: The unique identifier (integer) of the user.
+            :return: A tuple containing the name of the user (string) and a dictionary of their data (dict).
+        """
+        # Finds the user in the DataFrame by their user ID and gets their information.
         usuari = self.users.loc[self.users['id_usuari'] == id].iloc[0]
         nom=usuari[1]
         data = {}
 
-
-        # Usuari previament registrat
         try:
-            # Ultim cop que l'usuari s'ha registrat
-            aux = self.cases[self.cases["id_usuari"] == id].tail(1).to_dict(orient='records')[0] 
+             # Attempt to retrieve the most recent record for the user in the 'cases' DataFrame.
+            aux = self.cases[self.cases["id_usuari"] == id].tail(1).to_dict(orient='records')[0]
 
-            # Recuperem les dades de l'ultim cop que ha utilitzat el recomanador
-
+            # Extracts and stores various user preferences from the last time they used the recommender.
             data['any_naixement'] = aux['any_naixement']
             data['genere_persona'] = self.sex_options.index(aux['genere_persona'])
             for col in self.genre_options:
@@ -108,9 +150,7 @@ class CBR:
             data['pref_tipus_lectura'] = self.reading_options.index(aux['pref_tipus_lectura'])
             data['pagines_max'] = aux['pagines_max']
             
-
-
-        # Si es un usuari nou li posem les següents dades per defecte
+        # If the user is new, set default values for their preferences.
         except:
             data['any_naixement'] = 2000
             data['genere_persona'] = 0
@@ -127,9 +167,15 @@ class CBR:
     
         return nom, data
    
-
-    # Recuperem els llibres que s'ha llegit l'usuari
     def read(self,id):
+        """
+        Retrieves the books that the user has read.
+            :param id: The unique identifier (integer) of the user.
+            :return: A tuple containing:
+                     - llegits (DataFrame): DataFrame containing details of the books read by the user.
+                     - camps_no_editables (tuple): A tuple of column names that are not editable.
+                     - configuracio (dict): A dictionary configuring the display names of the columns in 'llegits'.
+        """
         df = self.cases[self.cases['id_usuari'] == id]
         llegits = pd.merge(df[['id_usuari','score','id_llibre','comprat']],self.books[['id_llibre','titol' ,'escrit_per']], on='id_llibre')
         # Per ordenar les columnes
@@ -141,15 +187,32 @@ class CBR:
    
     # Re-guardem el nom si l'usuari el modifica
     def change_user_name(self,id,nom):
+        """
+        Updates the name of the user if the user modifies it.
+            :param id: The unique identifier (integer) of the user.
+            :param nom: The new name (string) to be updated for the user.
+            :return: None. Modifies the 'nom' field for the user in the users DataFrame.
+        """
         self.users.loc[self.users["id_usuari"]==id,'nom'] = nom
         #self.users.to_csv('Users.csv', encoding='utf-8', index=False)
     
     def actualitzar_puntuacions(self,modificats):
+        """
+        Updates the scores of the books for the user.
+            :param modificats: A DataFrame containing the modified scores along with user and book IDs.
+            :return: None. Modifies the 'score' field in the 'cases' DataFrame for each user and book combination.
+        """
         for idx,fila in modificats.iterrows():
             self.cases.loc[(self.cases['id_usuari']==fila['id_usuari']) & (self.cases['id_llibre']==fila['id_llibre']),'score']=fila['score']
     
     def recomanacions(self,user_id,data):
+        """
+        Generates book recommendations based on user preferences and data provided.
+            :param user_id: The unique identifier (integer) of the user for whom recommendations are being made.
+            :param data: A dictionary containing the user's data and preferences.
 
+            :return: A list of tuples, each tuple containing detailed information about a recommended book and the reasoning behind the recommendation.
+        """
         data1 = data.copy()
         data1['any_naixement'] = '< 2003' if (data1['any_naixement'] < 2003) else '>= 2003'
         
@@ -199,8 +262,6 @@ class CBR:
             Old_solution_df = pd.DataFrame(trace_data[i]['Old_solution_description'],index=['Retrieved Solution'])
             Old_solution_trans = Old_solution_df.T
 
-            
-            #print(descripcio_trans)
             trace_1 = "Basant-nos en les teves preferències, hem trobat que el cas més similar al teu i que, alhora, més va agradar la recomanació que vam donar va ser:"
             trace_2 = f"Amb una similitud entre els dos casos de {trace_data[i]['Similarity_case']:.2f}"
             
@@ -221,6 +282,16 @@ class CBR:
         return llista
     
     def similarity(self,v1,v2,features_ordered, cases=True, retain = False):
+        """
+        Calculates the similarity between two vectors, v1 and v2, based on a set of features.
+            :param v1: The reference vector (or case) from which the similarity is computed.
+            :param v2: The vector to compare against the reference vector.
+            :param features_ordered: A list of features in the order of their hierarchical importance.
+            :param cases: Boolean flag indicating if the vectors represent cases (default True).
+            :param retain: Boolean flag to determine whether to include additional scoring in the similarity (default False).
+
+            :return: A float representing the computed similarity between the two vectors.
+        """
         #v1 is the reference (case) one. The one which we compute the similarity from
         diss = 0
         w = 0
@@ -277,7 +348,12 @@ class CBR:
         return sim
     
     def calculate_new_score(self, subset_similar_cases):
-        
+        """
+        Calculates a new score for the best case in a subset of similar cases based on their scores.
+            :param subset_similar_cases: A list of cases, each with an associated score (puntuacio).
+            
+            :return: The case with the maximum score after recalculating its score using a specific formula.
+        """
         list_similar_sorted = sorted(subset_similar_cases, key=lambda x:x.puntuacio,reverse=True)
         
         case_max_score = list_similar_sorted[0]
@@ -291,27 +367,28 @@ class CBR:
         return case_max_score
     
     def get_trace_data(self):
-        
         """
-        Retorna: Una list(dict()) que conté exactament tres diccionaris, un per cada cas del qual volem saber la traça
-                 Cada diccionari té les següents claus:
-                    Case_description: Diccionari retornat pel mètode to_dict() de la classe Case() que conté les característiques principals
-                                      del retrieved case. En aquesta funció es fa una modificació per a què la clau "any_naixement" sigui l'any
-                                      de naixement i no "< 2003" o ">= 2003".
-                    Similarity_case:  float() que determina el valor exacte de similitud (calculat amb la nostra funció de similitud) entre el retrieved case
-                                      i el problem case (el de l'usuari actual).
-                    Old_solution: id_llibre de la solució que es va donar al retrieved case.
-                    Old_solution_name: títol de la solució que es va donar al retrieved case.
-                    Old_solution_description: dict() que conté tots els atributs de la BD Books.csv per a la solució que es va donar al retrieved case.
-                    Broken_restrictions: list(str()) que conté strings que representen les restriccions que la solució donada al retrieved case
-                                         no compleix. Pot ser qualsevol de ["Gèneres preferits", "Edat mínima", "Idioma del llibre", "No comprat anteriorment"].
-                                         Si és buida, vol dir que la solució donada al retrieved case és la solució final (i no s'adapta).
-                    New_solution: id_llibre de la solució adaptada, en cas que hi hagi adaptació. None en altre cas.
-                    New_solution_name: títol de la solució adaptada, en cas que hi hagi adaptació. None en altre cas.
-                    New_solution_description: dict() que conté tots els atributs de la BD Books.csv per a la solució adaptada. None si no hi ha adaptació
-                    Similarity_book: float() que determina el valor exacta de similitud (usant la nostra funció de similitud) entre el llibre de la solució
-                                     que es va donar al retrieved case i el llibre que representa la solució adaptada.
+        Returns a list of dictionaries, each containing trace information for a specific case.
+            Each dictionary contains the following keys:
+            - Case_description: A dictionary containing the main characteristics of the retrieved case, with modifications to
+                                display the "any_naixement" (birth year) instead of "< 2003" or ">= 2003".
+            - Similarity_case: A float indicating the exact similarity value (calculated using a custom similarity function)
+                               between the retrieved case and the problem case (the current user's case).
+            - Old_solution: The id_llibre (book ID) of the solution given to the retrieved case.
+            - Old_solution_name: The title of the solution given to the retrieved case.
+            - Old_solution_description: A dictionary containing all attributes from the "Books.csv" database for the solution given to
+                                       the retrieved case.
+            - Broken_restrictions: A list of strings representing the restrictions that the solution given to the retrieved case
+                                   does not meet. Possible values are ["Preferred Genres", "Minimum Age", "Book Language", "Not Previously Purchased"].
+                                   If empty, it means the solution given to the retrieved case is the final solution (no adaptation is needed).
+            - New_solution: The id_llibre (book ID) of the adapted solution, if adaptation is performed. None otherwise.
+            - New_solution_name: The title of the adapted solution, if adaptation is performed. None otherwise.
+            - New_solution_description: A dictionary containing all attributes from the "Books.csv" database for the adapted solution.
+                                       None if no adaptation is performed.
+            - Similarity_book: A float indicating the exact similarity value (calculated using the custom similarity function) between
+                               the book of the solution given to the retrieved case and the book representing the adapted solution.
 
+            :return: A list of dictionaries, each containing trace information for a specific case.
         """
         
         for c in self.reused_cases_sim:
@@ -349,11 +426,13 @@ class CBR:
 
 
     def retrieve(self,data):
-        
-        #data es un diccionari amb tots els atributs que ha marcat l'usuari
-        #Retorna: Un set dels casos que compleixen el primer filtratge marcat per
-        #data. Si aquest set és menor que tres, aleshores cercar el node fulla més proper
-        #a l'arbre i agafar-ne els casos, fins que tinguem almenys 3 casos.
+        """
+        Retrieves cases from the case base based on user-provided data.
+            :param data: A dictionary containing user-selected attributes.
+
+            :return: A set of cases that meet the filtering criteria specified by the user in the data dictionary.
+                     If this set has fewer than three cases, it searches for the nearest leaf nodes in the tree and adds their cases until there are at least three cases.
+        """
         subset_cases_node, list_parents = self.case_base.evaluate_case_through_tree(data,[self.case_base])
 
         #Si el node fulla corresponent no té prou casos (mínim 3) cerquem
@@ -361,7 +440,6 @@ class CBR:
         subset_cases = subset_cases_node._subset.copy()
         co = 1
 
-        #PER VEURE QUE FUNCIONA
         ll_casos_idx = []
 
         while len(subset_cases) < 3:
@@ -374,15 +452,14 @@ class CBR:
 
         self.retrieved = subset_cases
 
-        #print("Retrieved:",ll_casos_idx)
-
 
     def reuse(self, data):
-        
-        #Dels casos donats, aplicar la funció de similitud entre casos per a
-        #a acabar reutilitzant la solució que es va donar als 3 casos més similars.
-        #Retorna un total de 3 solucions
-        
+        """
+        Reuses the solutions given to the 3 most similar cases from the retrieved cases.
+            :param data: A dictionary containing user-selected attributes.
+
+            :return: Three solutions that were given to the 3 most similar cases.
+        """
         self.case_problem = Case()
         self.case_problem.from_dict(data)
         sim_list = []
@@ -391,7 +468,6 @@ class CBR:
         
         sim_list_sorted = sorted(sim_list, key=lambda x:x[1],reverse=True)
 
-        #print("Casos ordenats per similitud:", sim_list_sorted)
         #To trace
         self.reused_cases_sim = []
         for result in sim_list_sorted[:3]:
@@ -400,17 +476,16 @@ class CBR:
             self.reused_cases_sim.append({'Case_description':case_dct,'Similarity_case':result[1],'Old_solution':case_dct['solucio']})
         self.reused = (sim_list_sorted[0][0].solucio,sim_list_sorted[1][0].solucio,sim_list_sorted[2][0].solucio)
 
-        #print("Millors solucions ordenades:", self.reused)
-
 
 
     def revise(self,book,index):
-        #Adaptar (si és necessari) cadascuna de les tres solucions donades per a què compleixin
-        #totes les restriccions obligatòries del nou problema, així com què s'assimilin el màxim possible a la solució recuperada
-        #per al cas més similar trobat. Donat que les solucions són llibres, adaptar en aquest cas
-        #voldrà dir seleccionar un altre llibre que sigui el més similar possible al llibre que es vol adaptar
-        #però que compleixi les restriccions adequades.
+        """
+        Adapt (if necessary) each of the three solutions given so that they meet all the mandatory restrictions of the new problem, as well as being as similar as possible to the solution retrieved for the most similar case found.
+            :param book: The book to be revised and adapted.
+            :param index: The index of the case being revised.
 
+            :return: The adapted book ID.
+        """
         #Comprovació de restriccions obligatòries
         oblig = [False,False,False,False]
         book_row = self.books[self.books['id_llibre'] == book]
@@ -447,8 +522,6 @@ class CBR:
 
         #Si és tot True, hem acabat l'adaptació (no fa falta). Si no, agafar els llibres que compleixin les obligatòries i que siguin més 
         #similars a les preferències de l'usuari (?)
-        
-        #print(book,oblig)
 
         if False in oblig:
 
@@ -500,7 +573,6 @@ class CBR:
                     books_sim.append((fila['id_llibre'],self.similarity(vector_llibre_adaptat,vector_llibre_2,cases=False,features_ordered=self.genre_options+['any_publicacio', 'best_seller', 'saga', 'adaptacio_a_pelicula', 'edat_minima', 'num_pagines'])))
 
                 books_sim_sorted = sorted(books_sim, key=lambda x:x[1],reverse=True)
-                #print("Possibles llibres que adapten:",books_sim_sorted)
 
                 #Avoid returning an already adapted book (ready to be recommended)
                 adapted = books_sim_sorted[0][0]
@@ -536,7 +608,6 @@ class CBR:
         storing_case = case #En principi, afegim el cas adaptat
 
         #Modify csv
-
         valors_genere = [case.ciencia_ficcio, case.historica, case.ficcio, case.comedia, case.romance, case.fantasia, case.ciencia, case.creixement_personal, case.policiaca, case.juvenil]
         self.cases.loc[len(self.cases)] = [case.id_usuari, case.solucio, case.puntuacio, case.genere_persona, case.any_naixement, case.pref_adaptacio_peli, case.pref_best_seller,
                                            case.pref_tipus_lectura, case.pref_sagues,case.comprat] + valors_genere + [case.pagines_max, case.idioma]
